@@ -3,7 +3,7 @@ import java.io.*;
 
 public class ServerThread implements Runnable {
 
-    public ServerThread(Socket accept) {
+    public ServerThread(Server s, Socket accept) {
     }
 
     @Override
