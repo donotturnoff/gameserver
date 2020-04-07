@@ -1,2 +1,2 @@
 # gameserver
-A server for online games
+A server for online board games
