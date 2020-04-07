@@ -17,18 +17,24 @@ public class Server {
     private Server(int port) {this.port = port;}
 
     private void run() throws IOException {
+        try {
+            serverSocket = new ServerSocket(port);
+            serverSocket.setReuseAddress(true);
+        } catch (IOException e){
+            //TODO: Log Fatal Error
+            System.out.println("Fatal Error : " + e);
+            System.exit(1);
+        }
         while (true){
             try {
-                serverSocket = new ServerSocket(port);
-                serverSocket.setReuseAddress(true);
-                serverThreads.add(new ServerThread(serverSocket.accept()));
+                ServerThread c = new ServerThread(serverSocket.accept());
+                serverThreads.add(c);
+                (new Thread(c)).start();
 
             } catch (IOException e) {
-                //TODO: Decide whether the error is worth letting run up to the main funciton for catching there
-                //TODO: Log Fatal Error
+                //TODO: Log Connection Error
                 //This quits the system should it encounter an error when creating a port for the server
-                System.out.println("FATAL ERROR");
-                System.exit(1);
+                System.out.println("Connection Error");
             }
         }
     }
