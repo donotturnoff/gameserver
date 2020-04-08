@@ -12,6 +12,7 @@ public class Server {
 
     public static void main(String[] args) {
         if (args.length != 1) {
+            //TODO: improve error message
             System.out.println("Requires one argument: port number");
             System.exit(1);
         } else {
@@ -32,7 +33,7 @@ public class Server {
                 for (ServerThread t : serverThreads){
                     t.close();
                 }
-                System.out.println("Application terminating");
+                System.out.println("\nApplication terminating");
                 //TODO: log application termination
             }
         });
