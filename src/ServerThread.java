@@ -42,7 +42,7 @@ public class ServerThread implements Runnable {
     }
 
     private void send(String s) {
-        //TODO: send response
+        out.write(s);
     }
 
     public void close() {
