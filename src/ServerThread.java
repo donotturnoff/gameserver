@@ -14,7 +14,7 @@ public class ServerThread implements Runnable {
         this.main = main;
         this.c = c;
         this.in = new BufferedReader(new InputStreamReader(c.getInputStream()));
-        this.out = new PrintWriter(c.getOutputStream(), true);
+        this.out = new PrintWriter(c.getOutputStream());
     }
 
     @Override
@@ -41,8 +41,11 @@ public class ServerThread implements Runnable {
         return lines;
     }
 
-    private void send(String s) {
-        out.write(s);
+    private void send(List<String> lines) {
+        for (String line: lines) {
+            out.println(line);
+        }
+        out.flush();
     }
 
     public void close() {
