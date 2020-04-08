@@ -3,23 +3,29 @@ import java.util.HashSet;
 import java.util.List;
 import java.net.*;
 import java.io.*;
+import java.util.Set;
 
 public class Server {
-    private HashSet<ServerThread> serverThreads;
+    private Set<ServerThread> serverThreads;
     private ServerSocket serverSocket;
     private int port;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         Server server = new Server(Integer.parseInt(args[0]));
         server.run();
     }
 
-    private Server(int port) {this.port = port;}
+    private Server(int port) {
+        this.port = port;
+        serverThreads = new HashSet<>();
+    }
 
-    private void run() throws IOException {
+    private void run() {
         try {
             serverSocket = new ServerSocket(port);
             serverSocket.setReuseAddress(true);
+            //TODO: log server startup
+            System.out.println("Listening on port " + serverSocket.getLocalPort());
         } catch (IOException e){
             //TODO: Log Fatal Error
             System.out.println("Fatal Error : " + e);
@@ -27,9 +33,11 @@ public class Server {
         }
         while (true){
             try {
-                ServerThread c = new ServerThread(this, serverSocket.accept());
-                serverThreads.add(c);
-                (new Thread(c)).start();
+                Socket c = serverSocket.accept();
+                System.out.println("Accepted connection from " + c); //TODO: log connection (with better format)
+                ServerThread t = new ServerThread(this, c);
+                serverThreads.add(t);
+                (new Thread(t)).start();
 
             } catch (IOException e) {
                 //TODO: Log Connection Error
@@ -39,7 +47,7 @@ public class Server {
         }
     }
 
-    public void closeThread(ServerThread c){
+    void closeThread(ServerThread c){
         serverThreads.remove(c);
         //TODO: Log Closure
     }

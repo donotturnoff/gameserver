@@ -19,28 +19,44 @@ public class ServerThread implements Runnable {
 
     @Override
     public void run() {
-        //TODO: handle connections
+        List<String> lines;
+        try {
+            lines = recv();
+        } catch (IOException e) {
+            System.out.println("Failed to receive request");
+            //TODO: log recv error
+        }
+        close();
     }
 
-    private List<String> read() {
+    private List<String> recv() throws IOException {
         List<String> lines = new ArrayList<>();
-        //TODO: read request into list
+        String prevLine;
+        String line = "";
+        do {
+            prevLine = line;
+            line = in.readLine();
+            lines.add(line);
+        } while (line != null && !(line.isEmpty() && prevLine.isEmpty()));
         return lines;
     }
 
-    private void write(String s) {
+    private void send(String s) {
         //TODO: send response
     }
 
     public void close() {
         try {
+            c.shutdownInput();
             c.shutdownOutput();
             in.close();
             out.close();
             c.close();
+            //TODO: log connection close success
+            System.out.println("Closed client connection to " + c);
         } catch (IOException e) {
             //TODO: log connection close failure
-            System.out.println("Failed to close client connection gracefully.");
+            System.out.println("Failed to close connection to " + c + " gracefully.");
         } finally {
             main.closeThread(this);
         }
