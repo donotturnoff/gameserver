@@ -36,6 +36,8 @@ public class ServerThread implements Runnable {
         close();
     }
 
+    Socket getSocket(){ return c; }
+
     private String recv() throws IOException {
         //TODO: correctly handle chunked transfer
         StringBuilder requestBuilder = new StringBuilder();

@@ -21,6 +21,17 @@ public class Server {
     }
 
     private void run() {
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                System.out.println("Shutdown Hook is running !");
+                for (ServerThread t : serverThreads){
+                    t.close();
+                }
+                System.out.println("Application Terminating ...");
+            }
+        });
+
         try {
             serverSocket = new ServerSocket(port);
             serverSocket.setReuseAddress(true);
