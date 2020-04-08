@@ -11,8 +11,13 @@ public class Server {
     private int port;
 
     public static void main(String[] args) {
-        Server server = new Server(Integer.parseInt(args[0]));
-        server.run();
+        if (args.length != 1) {
+            System.out.println("Requires one argument: port number");
+            System.exit(1);
+        } else {
+            Server server = new Server(Integer.parseInt(args[0]));
+            server.run();
+        }
     }
 
     private Server(int port) {
@@ -24,11 +29,11 @@ public class Server {
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                System.out.println("Shutdown Hook is running !");
                 for (ServerThread t : serverThreads){
                     t.close();
                 }
-                System.out.println("Application Terminating ...");
+                System.out.println("Application terminating");
+                //TODO: log application termination
             }
         });
 
@@ -39,8 +44,8 @@ public class Server {
             System.out.println("Listening on port " + serverSocket.getLocalPort());
         } catch (IOException e){
             //TODO: Log Fatal Error
-            System.out.println("Fatal Error : " + e);
-            System.exit(1);
+            System.out.println("Fatal error: " + e);
+            System.exit(2);
         }
         while (true){
             try {
