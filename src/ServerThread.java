@@ -19,32 +19,42 @@ public class ServerThread implements Runnable {
 
     @Override
     public void run() {
-        List<String> lines;
+        String req;
         try {
-            lines = recv();
+            req = recv();
         } catch (IOException e) {
             System.out.println("Failed to receive request");
             //TODO: log recv error
         }
+        send("HTTP/1.1 200 OK");
         close();
     }
 
-    private List<String> recv() throws IOException {
-        List<String> lines = new ArrayList<>();
-        String prevLine;
-        String line = "";
+    private String recv() throws IOException {
+        //TODO: correctly handle chunked transfer
+        StringBuilder requestBuilder = new StringBuilder();
+        int contentLength = 0;
+        String line;
         do {
-            prevLine = line;
             line = in.readLine();
-            lines.add(line);
-        } while (line != null && !(line.isEmpty() && prevLine.isEmpty()));
-        return lines;
+            requestBuilder.append(line).append("\r\n");
+            String[] parts = line.split(":", 2);
+            if (parts.length > 1) {
+                String key = parts[0].trim();
+                if (key.equals("Content-Length")) {
+                    String val = parts[1].trim();
+                    contentLength = Integer.parseInt(val);
+                }
+            }
+        } while (line != null && !line.isEmpty());
+        char[] bodyBuffer = new char[contentLength];
+        int bytesRead = in.read(bodyBuffer, 0, contentLength);
+        requestBuilder.append(new String(bodyBuffer));
+        return requestBuilder.toString();
     }
 
-    private void send(List<String> lines) {
-        for (String line: lines) {
-            out.println(line);
-        }
+    private void send(String s) {
+        out.write(s);
         out.flush();
     }
 
