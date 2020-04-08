@@ -1,7 +1,11 @@
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.json.*;
 
 public class ServerThread implements Runnable {
 
@@ -22,11 +26,13 @@ public class ServerThread implements Runnable {
         String req;
         try {
             req = recv();
+            send("HTTP/1.1 200 OK");
+            System.out.println(extractHeaders(req));
         } catch (IOException e) {
             System.out.println("Failed to receive request");
+            send("HTTP/1.1 500 Internal Server Error");
             //TODO: log recv error
         }
-        send("HTTP/1.1 200 OK");
         close();
     }
 
@@ -56,6 +62,33 @@ public class ServerThread implements Runnable {
     private void send(String s) {
         out.write(s);
         out.flush();
+    }
+
+    private HashMap<String, String> extractHeaders(String req) {
+        HashMap<String, String> headers = new HashMap<>();
+        String[] lines = req.split("\r\n");
+        String[] firstLineParts = lines[0].split(" ");
+        headers.put("Method", firstLineParts[0]);
+        headers.put("Path", firstLineParts[1]);
+        headers.put("Protocol", firstLineParts[2]);
+        for (int i = 1; i < lines.length; i++) {
+            String line = lines[i];
+            if (line.isEmpty()) {
+                break;
+            }
+            String[] parts = line.split(":", 2);
+            if (parts.length > 1) {
+                String key = parts[0].trim();
+                String val = parts[1].trim();
+                headers.put(key, val);
+            }
+        }
+        return headers;
+    }
+
+    private JSONObject extractBody(String req) {
+        JSONObject body = new JSONObject();
+        return body;
     }
 
     public void close() {
