@@ -73,7 +73,7 @@ public class ServerThread implements Runnable {
         out.flush();
     }
 
-    private HashMap<String, String> extractHeaders(String headString) {
+    private HashMap<String, String> extractHeaders(String headString) throws BadRequestException {
         HashMap<String, String> headers = new HashMap<>();
         String[] lines = headString.split("\r\n");
         String[] firstLineParts = lines[0].split(" ");
@@ -88,6 +88,9 @@ public class ServerThread implements Runnable {
                 String val = parts[1].trim();
                 headers.put(key, val);
             }
+        }
+        if (!headers.containsKey("Content-Length")) {
+            throw new BadRequestException("Missing Content-Length header");
         }
         return headers;
     }
