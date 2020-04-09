@@ -89,7 +89,9 @@ public class ServerThread implements Runnable {
     }
 
     private JSONObject extractBody(String req) {
+
         JSONObject body = new JSONObject();
+
         return body;
     }
 
