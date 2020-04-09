@@ -23,22 +23,30 @@ public class ServerThread implements Runnable {
 
     @Override
     public void run() {
-        String req;
+        //TODO: handle exceptions more generally
+        String[] req;
         try {
             req = recv();
+            System.out.println(extractHeaders(req[0]));
+            System.out.println(extractBody(req[1]));
             send("HTTP/1.1 200 OK");
-            System.out.println(extractHeaders(req));
         } catch (IOException e) {
             System.out.println("Failed to receive request");
             send("HTTP/1.1 500 Internal Server Error");
             //TODO: log recv error
+        } catch (BadRequestException e) {
+            System.out.println("Received bad request");
+            send("HTTP/1.1 400 Bad Request");
+            //TODO: log bad request error
         }
         close();
     }
 
-    Socket getSocket(){ return c; }
+    Socket getSocket() {
+        return c;
+    }
 
-    private String recv() throws IOException {
+    private String[] recv() throws IOException {
         //TODO: correctly handle chunked transfer
         StringBuilder requestBuilder = new StringBuilder();
         int contentLength = 0;
@@ -47,7 +55,7 @@ public class ServerThread implements Runnable {
             line = in.readLine();
             requestBuilder.append(line).append("\r\n");
             String[] parts = line.split(":", 2);
-            if (parts.length > 1) {
+            if (parts.length == 2) {
                 String key = parts[0].trim();
                 if (key.equals("Content-Length")) {
                     String val = parts[1].trim();
@@ -57,8 +65,7 @@ public class ServerThread implements Runnable {
         } while (line != null && !line.isEmpty());
         char[] bodyBuffer = new char[contentLength];
         int bytesRead = in.read(bodyBuffer, 0, contentLength);
-        requestBuilder.append(new String(bodyBuffer));
-        return requestBuilder.toString();
+        return new String[]{requestBuilder.toString(), new String(bodyBuffer)};
     }
 
     private void send(String s) {
@@ -66,20 +73,17 @@ public class ServerThread implements Runnable {
         out.flush();
     }
 
-    private HashMap<String, String> extractHeaders(String req) {
+    private HashMap<String, String> extractHeaders(String headString) {
         HashMap<String, String> headers = new HashMap<>();
-        String[] lines = req.split("\r\n");
+        String[] lines = headString.split("\r\n");
         String[] firstLineParts = lines[0].split(" ");
         headers.put("Method", firstLineParts[0]);
         headers.put("Path", firstLineParts[1]);
         headers.put("Protocol", firstLineParts[2]);
         for (int i = 1; i < lines.length; i++) {
             String line = lines[i];
-            if (line.isEmpty()) {
-                break;
-            }
             String[] parts = line.split(":", 2);
-            if (parts.length > 1) {
+            if (parts.length == 2) {
                 String key = parts[0].trim();
                 String val = parts[1].trim();
                 headers.put(key, val);
@@ -88,14 +92,15 @@ public class ServerThread implements Runnable {
         return headers;
     }
 
-    private JSONObject extractBody(String req) {
-
-        JSONObject body = new JSONObject();
-
-        return body;
+    private JSONObject extractBody(String bodyString) throws BadRequestException {
+        try {
+            return new JSONObject(bodyString);
+        } catch (JSONException e) {
+            throw new BadRequestException("Malformed JSON in body");
+        }
     }
 
-    public void close() {
+    void close() {
         try {
             c.shutdownInput();
             c.shutdownOutput();
