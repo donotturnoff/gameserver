@@ -4,19 +4,45 @@ import java.util.List;
 import java.net.*;
 import java.io.*;
 import java.util.Set;
+import java.util.logging.*;
 
 public class Server {
+    private static final Logger logger = Logger.getLogger(Server.class.getName());
+
+    static {
+        logger.setUseParentHandlers(false);
+        //Remove initial handlers
+        Handler[] handlers = logger.getHandlers();
+        for (Handler handler: handlers) {
+            logger.removeHandler(handler);
+        }
+
+        ConsoleHandler consoleHandler = new ConsoleHandler();
+        consoleHandler.setFormatter(new SimpleFormatter());
+        consoleHandler.setLevel(Level.ALL);
+        logger.addHandler(consoleHandler);
+
+        try {
+            FileHandler fileHandler = new FileHandler("log%u.txt", true);
+            fileHandler.setFormatter(new SimpleFormatter());
+            fileHandler.setLevel(Level.INFO);
+            logger.addHandler(fileHandler);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to open log file", e);
+        }
+    }
+
     private Set<ServerThread> serverThreads;
     private ServerSocket serverSocket;
     private int port;
 
     public static void main(String[] args) {
         if (args.length != 1) {
-            //TODO: improve error message
-            System.out.println("Requires one argument: port number");
+            logger.log(Level.SEVERE, "Requires one argument: port number");
             System.exit(1);
         } else {
             Server server = new Server(Integer.parseInt(args[0]));
+            logger.log(Level.INFO, "Spawned server");
             server.run();
         }
     }
@@ -27,45 +53,40 @@ public class Server {
     }
 
     private void run() {
-
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                for (ServerThread t : serverThreads){
-                    t.close();
-                }
-                System.out.println("\nApplication terminating");
-                //TODO: log application termination
+        //TODO: move to main
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            for (ServerThread t: serverThreads) {
+                //TODO: Call closeThread
+                t.close();
             }
-        });
+            logger.log(Level.INFO, "Application exiting");
+        }));
 
         try {
             serverSocket = new ServerSocket(port);
             serverSocket.setReuseAddress(true);
-            //TODO: log server startup
-            System.out.println("Listening on port " + serverSocket.getLocalPort());
+            logger.log(Level.INFO, "Listening on port " + serverSocket.getLocalPort());
         } catch (IOException e){
-            //TODO: Log Fatal Error
-            System.out.println("Fatal error: " + e);
+            logger.log(Level.SEVERE, "Failed to start server", e);
             System.exit(2);
         }
-        while (true){
+        //TODO: noinspection InfiniteLoopStatement
+        while (true) {
             try {
                 Socket c = serverSocket.accept();
-                System.out.println("Accepted connection from " + c); //TODO: log connection (with better format)
+                logger.log(Level.INFO,"Accepted connection: " + c);
                 ServerThread t = new ServerThread(this, c);
                 serverThreads.add(t);
                 (new Thread(t)).start();
-
+                logger.log(Level.FINE,"Started new thread to handle " + c);
             } catch (IOException e) {
-                //TODO: Log Connection Error
-                //This quits the system should it encounter an error when creating a port for the server
-                System.out.println("Connection Error");
+                logger.log(Level.WARNING, "Failed to accept connection", e);
             }
         }
     }
 
-    void closeThread(ServerThread c){
+    void closeThread(ServerThread c) {
+        //TODO: close thread from here
         serverThreads.remove(c);
-        //TODO: Log Closure
     }
 }
