@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.*;
 
 import org.json.*;
 
@@ -13,6 +14,20 @@ public class ServerThread implements Runnable {
     private Socket c;
     private PrintWriter out;
     private BufferedReader in;
+    private static final Logger logger = Logger.getLogger(ServerThread.class.getName());
+
+    static {
+        //final ConsoleHandler chandler = new ConsoleHandler();
+        //chandler.setFormatter(new SimpleFormatter());
+        //logger.addHandler(chandler);
+        try {
+            final FileHandler fhandler = new FileHandler("log%u.txt", true);
+            fhandler.setFormatter(new SimpleFormatter());
+            logger.addHandler(fhandler);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to open log file", e);
+        }
+    }
 
     ServerThread(Server main, Socket c) throws IOException {
         this.main = main;
@@ -23,7 +38,6 @@ public class ServerThread implements Runnable {
 
     @Override
     public void run() {
-        //TODO: handle exceptions more generally
         String[] req;
         try {
             req = recv();
@@ -31,13 +45,11 @@ public class ServerThread implements Runnable {
             System.out.println(extractBody(req[1]));
             send("HTTP/1.1 200 OK");
         } catch (IOException e) {
-            System.out.println("Failed to receive request");
             send("HTTP/1.1 500 Internal Server Error");
-            //TODO: log recv error
+            logger.log(Level.INFO, "Failed to receive request : 500", e);
         } catch (BadRequestException e) {
-            System.out.println("Received bad request: " + e.toString());
             send("HTTP/1.1 400 Bad Request");
-            //TODO: log bad request error
+            logger.log(Level.INFO, "Received bad request : 400", e);
         }
         close();
     }
@@ -53,6 +65,9 @@ public class ServerThread implements Runnable {
         String line;
         do {
             line = in.readLine();
+            if (line == null){
+                break;
+            }
             requestBuilder.append(line).append("\r\n");
             String[] parts = line.split(":", 2);
             if (parts.length == 2) {
@@ -62,7 +77,7 @@ public class ServerThread implements Runnable {
                     contentLength = Integer.parseInt(val);
                 }
             }
-        } while (line != null && !line.isEmpty());
+        } while (!line.isEmpty());
         char[] bodyBuffer = new char[contentLength];
         int bytesRead = in.read(bodyBuffer, 0, contentLength);
         return new String[]{requestBuilder.toString(), new String(bodyBuffer)};
@@ -100,6 +115,7 @@ public class ServerThread implements Runnable {
                 return new JSONObject(bodyString);
             }
         } catch (JSONException e) {
+            logger.log(Level.INFO, "Malformed JSON in body", e);
             throw new BadRequestException("Malformed JSON in body");
         }
     }
@@ -111,11 +127,9 @@ public class ServerThread implements Runnable {
             in.close();
             out.close();
             c.close();
-            //TODO: log connection close success
-            System.out.println("Closed client connection to " + c);
+            logger.log(Level.INFO, "Closed client connection to " + c);
         } catch (IOException e) {
-            //TODO: log connection close failure
-            System.out.println("Failed to close connection to " + c + " gracefully.");
+            logger.log(Level.WARNING, "Failed to close connection to " + c + " gracefully.");
         } finally {
             main.closeThread(this);
         }
