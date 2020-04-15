@@ -1,9 +1,6 @@
 import java.net.*;
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.logging.*;
 
 import org.json.*;
@@ -77,6 +74,9 @@ public class ServerThread implements Runnable {
         } while (!line.isEmpty());
         char[] bodyBuffer = new char[contentLength];
         int bytesRead = in.read(bodyBuffer, 0, contentLength);
+        if (bytesRead < 0) {
+            logger.log(Level.INFO, "Body shorter than stated Content-Length");
+        }
         return new String[]{requestBuilder.toString(), new String(bodyBuffer)};
     }
 
