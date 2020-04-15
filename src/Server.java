@@ -1,6 +1,4 @@
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.net.*;
 import java.io.*;
 import java.util.Set;
@@ -11,6 +9,7 @@ public class Server {
 
     static {
         logger.setUseParentHandlers(false);
+
         //Remove initial handlers
         Handler[] handlers = logger.getHandlers();
         for (Handler handler: handlers) {
@@ -53,7 +52,6 @@ public class Server {
     }
 
     private void run() {
-        //TODO: move to main
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             for (ServerThread t: serverThreads) {
                 closeThread(t);
@@ -65,11 +63,12 @@ public class Server {
             serverSocket = new ServerSocket(port);
             serverSocket.setReuseAddress(true);
             logger.log(Level.INFO, "Listening on port " + serverSocket.getLocalPort());
-        } catch (IOException e){
+        } catch (IOException e) {
             logger.log(Level.SEVERE, "Failed to start server", e);
             System.exit(2);
         }
-        //TODO: noinspection InfiniteLoopStatement
+
+        //noinspection InfiniteLoopStatement
         while (true) {
             try {
                 Socket c = serverSocket.accept();
