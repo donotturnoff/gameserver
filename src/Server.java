@@ -8,19 +8,6 @@ public class Server {
     private static final Logger logger = Logger.getLogger(Server.class.getName());
 
     static {
-        logger.setUseParentHandlers(false);
-
-        //Remove initial handlers
-        Handler[] handlers = logger.getHandlers();
-        for (Handler handler: handlers) {
-            logger.removeHandler(handler);
-        }
-
-        ConsoleHandler consoleHandler = new ConsoleHandler();
-        consoleHandler.setFormatter(new SimpleFormatter());
-        consoleHandler.setLevel(Level.ALL);
-        logger.addHandler(consoleHandler);
-
         try {
             FileHandler fileHandler = new FileHandler("log%u.txt", true);
             fileHandler.setFormatter(new SimpleFormatter());

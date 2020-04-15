@@ -17,9 +17,6 @@ public class ServerThread implements Runnable {
     private static final Logger logger = Logger.getLogger(ServerThread.class.getName());
 
     static {
-        //final ConsoleHandler chandler = new ConsoleHandler();
-        //chandler.setFormatter(new SimpleFormatter());
-        //logger.addHandler(chandler);
         try {
             final FileHandler fhandler = new FileHandler("log%u.txt", true);
             fhandler.setFormatter(new SimpleFormatter());
