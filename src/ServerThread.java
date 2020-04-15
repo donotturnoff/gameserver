@@ -35,7 +35,7 @@ public class ServerThread implements Runnable {
             send("HTTP/1.1 500 Internal Server Error");
             //TODO: log recv error
         } catch (BadRequestException e) {
-            System.out.println("Received bad request");
+            System.out.println("Received bad request: " + e.toString());
             send("HTTP/1.1 400 Bad Request");
             //TODO: log bad request error
         }
@@ -88,9 +88,6 @@ public class ServerThread implements Runnable {
                 String val = parts[1].trim();
                 headers.put(key, val);
             }
-        }
-        if (!headers.containsKey("Content-Length")) {
-            throw new BadRequestException("Missing Content-Length header");
         }
         return headers;
     }
