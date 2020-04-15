@@ -56,8 +56,7 @@ public class Server {
         //TODO: move to main
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             for (ServerThread t: serverThreads) {
-                //TODO: Call closeThread
-                t.close();
+                closeThread(t);
             }
             logger.log(Level.INFO, "Application exiting");
         }));
@@ -85,8 +84,8 @@ public class Server {
         }
     }
 
-    void closeThread(ServerThread c) {
-        //TODO: close thread from here
-        serverThreads.remove(c);
+    void closeThread(ServerThread t) {
+        t.close();
+        serverThreads.remove(t);
     }
 }
