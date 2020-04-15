@@ -73,7 +73,7 @@ public class ServerThread implements Runnable {
         out.flush();
     }
 
-    private HashMap<String, String> extractHeaders(String headString) throws BadRequestException {
+    private HashMap<String, String> extractHeaders(String headString) {
         HashMap<String, String> headers = new HashMap<>();
         String[] lines = headString.split("\r\n");
         String[] firstLineParts = lines[0].split(" ");
