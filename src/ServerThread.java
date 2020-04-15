@@ -94,7 +94,11 @@ public class ServerThread implements Runnable {
 
     private JSONObject extractBody(String bodyString) throws BadRequestException {
         try {
-            return new JSONObject(bodyString);
+            if (bodyString.isBlank()) {
+                return new JSONObject();
+            } else {
+                return new JSONObject(bodyString);
+            }
         } catch (JSONException e) {
             throw new BadRequestException("Malformed JSON in body");
         }
