@@ -16,12 +16,12 @@ public class ServerThread implements Runnable {
     private BufferedReader in;
     private static final Logger logger = Logger.getLogger(ServerThread.class.getName());
 
-    {
-        final ConsoleHandler chandler = new ConsoleHandler();
-        chandler.setFormatter(new SimpleFormatter());
-        logger.addHandler(chandler);
+    static {
+        //final ConsoleHandler chandler = new ConsoleHandler();
+        //chandler.setFormatter(new SimpleFormatter());
+        //logger.addHandler(chandler);
         try {
-            final FileHandler fhandler = new FileHandler("log%u.txt");
+            final FileHandler fhandler = new FileHandler("log%u.txt", true);
             fhandler.setFormatter(new SimpleFormatter());
             logger.addHandler(fhandler);
         } catch (IOException e) {
@@ -30,18 +30,14 @@ public class ServerThread implements Runnable {
     }
 
     ServerThread(Server main, Socket c) throws IOException {
-        logger.entering(ServerThread.class.getName(), "ServerThread");
         this.main = main;
         this.c = c;
         this.in = new BufferedReader(new InputStreamReader(c.getInputStream()));
         this.out = new PrintWriter(c.getOutputStream());
-        logger.exiting(ServerThread.class.getName(), "ServerThread");
     }
 
     @Override
     public void run() {
-        //TODO: handle exceptions more generally
-        logger.entering(ServerThread.class.getName(), "run");
         String[] req;
         try {
             req = recv();
@@ -54,20 +50,15 @@ public class ServerThread implements Runnable {
         } catch (BadRequestException e) {
             send("HTTP/1.1 400 Bad Request");
             logger.log(Level.INFO, "Received bad request : 400", e);
-            //TODO: log bad request error
         }
-        logger.exiting(ServerThread.class.getName(), "run");
         close();
     }
 
     Socket getSocket() {
-        logger.entering(ServerThread.class.getName(), "getSocket");
-        logger.exiting(ServerThread.class.getName(), "getSocket", c);
         return c;
     }
 
     private String[] recv() throws IOException {
-        logger.entering(ServerThread.class.getName(), "recv");
         //TODO: correctly handle chunked transfer
         StringBuilder requestBuilder = new StringBuilder();
         int contentLength = 0;
@@ -89,19 +80,15 @@ public class ServerThread implements Runnable {
         } while (!line.isEmpty());
         char[] bodyBuffer = new char[contentLength];
         int bytesRead = in.read(bodyBuffer, 0, contentLength);
-        logger.exiting(ServerThread.class.getName(), "recv", (new String[]{requestBuilder.toString(), new String(bodyBuffer)}));
         return new String[]{requestBuilder.toString(), new String(bodyBuffer)};
     }
 
     private void send(String s) {
-        logger.entering(ServerThread.class.getName(), "send", s);
         out.write(s);
         out.flush();
-        logger.exiting(ServerThread.class.getName(), "send");
     }
 
     private HashMap<String, String> extractHeaders(String headString) {
-        logger.entering(ServerThread.class.getName(), "extractHeaders", headString);
         HashMap<String, String> headers = new HashMap<>();
         String[] lines = headString.split("\r\n");
         String[] firstLineParts = lines[0].split(" ");
@@ -117,29 +104,23 @@ public class ServerThread implements Runnable {
                 headers.put(key, val);
             }
         }
-        logger.exiting(ServerThread.class.getName(), "extractHeaders", headers);
         return headers;
     }
 
     private JSONObject extractBody(String bodyString) throws BadRequestException {
-        logger.entering(ServerThread.class.getName(), "extractbody", bodyString);
         try {
             if (bodyString.isBlank()) {
-                logger.exiting(ServerThread.class.getName(), "extractHeaders");
                 return new JSONObject();
             } else {
-                logger.exiting(ServerThread.class.getName(), "extractHeaders");
                 return new JSONObject(bodyString);
             }
         } catch (JSONException e) {
             logger.log(Level.INFO, "Malformed JSON in body", e);
-            logger.exiting(ServerThread.class.getName(), "extractHeaders");
             throw new BadRequestException("Malformed JSON in body");
         }
     }
 
     void close() {
-        logger.entering(ServerThread.class.getName(), "close");
         try {
             c.shutdownInput();
             c.shutdownOutput();
@@ -150,7 +131,6 @@ public class ServerThread implements Runnable {
         } catch (IOException e) {
             logger.log(Level.WARNING, "Failed to close connection to " + c + " gracefully.");
         } finally {
-            logger.exiting(ServerThread.class.getName(), "close");
             main.closeThread(this);
         }
     }
