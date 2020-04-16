@@ -41,7 +41,7 @@ public class Server {
     private void run() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             for (ServerThread t: serverThreads) {
-                closeThread(t);
+                t.close();
             }
             logger.log(Level.INFO, "Application exiting");
         }));
@@ -70,8 +70,7 @@ public class Server {
         }
     }
 
-    void closeThread(ServerThread t) {
-        t.close();
-        serverThreads.remove(t);
+    void closeThread(ServerThread c) {
+        serverThreads.remove(c);
     }
 }
