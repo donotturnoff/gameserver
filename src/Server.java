@@ -27,9 +27,14 @@ public class Server {
             logger.log(Level.SEVERE, "Requires one argument: port number");
             System.exit(1);
         } else {
-            Server server = new Server(Integer.parseInt(args[0]));
-            logger.log(Level.INFO, "Spawned server");
-            server.run();
+            try {
+                Server server = new Server(Integer.parseInt(args[0]));
+                logger.log(Level.INFO, "Spawned server");
+                server.run();
+            } catch (IllegalArgumentException e) {
+                logger.log(Level.SEVERE, "Invalid port number", e);
+                System.exit(1);
+            }
         }
     }
 
@@ -39,12 +44,7 @@ public class Server {
     }
 
     private void run() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            for (ServerThread t: serverThreads) {
-                t.close();
-            }
-            logger.log(Level.INFO, "Application exiting");
-        }));
+        Runtime.getRuntime().addShutdownHook(new Thread(this::halt));
 
         try {
             serverSocket = new ServerSocket(port);
@@ -67,6 +67,18 @@ public class Server {
             } catch (IOException e) {
                 logger.log(Level.WARNING, "Failed to accept connection", e);
             }
+        }
+    }
+
+    private void halt() {
+        try {
+            serverSocket.close();
+            for (ServerThread t: serverThreads) {
+                t.close();
+            }
+            logger.log(Level.INFO, "Application exiting");
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Failed to gracefully halt server", e);
         }
     }
 
