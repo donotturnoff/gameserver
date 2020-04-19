@@ -44,10 +44,9 @@ public class Server {
     }
 
     private void run() {
-        Runtime.getRuntime().addShutdownHook(new Thread(this::halt));
-
         try {
             serverSocket = new ServerSocket(port);
+            Runtime.getRuntime().addShutdownHook(new Thread(this::halt));
             serverSocket.setReuseAddress(true);
             logger.log(Level.INFO, "Listening on port " + serverSocket.getLocalPort());
         } catch (IOException e) {
