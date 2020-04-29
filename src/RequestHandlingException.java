@@ -1,6 +1,5 @@
 public class RequestHandlingException extends Exception {
     private Status status;
-    private String msg;
 
     public RequestHandlingException(Status status) {
         super("");
@@ -14,9 +13,5 @@ public class RequestHandlingException extends Exception {
 
     public Status getStatus() {
         return status;
-    }
-
-    public String getMessage() {
-        return msg;
     }
 }
