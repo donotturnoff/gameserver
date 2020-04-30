@@ -73,17 +73,20 @@ public enum Status {
     NOT_EXTENDED(510, "Not Extended"),
     NETWORK_AUTHENTICATION_REQUIRED(511, "Network Authentication Required");
 
-
     private int code;
     private String name;
 
-
-    private Status (int i, String s) {
+    Status(int i, String s) {
         this.code = i;
         this.name = s;
     }
 
-    public int getCode() { return this.code; }
-    public String getName() { return this.name; }
+    public int getCode() {
+        return this.code;
+    }
+
+    public String getName() {
+        return this.name;
+    }
 
 }
