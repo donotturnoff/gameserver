@@ -32,19 +32,18 @@ public class ServerThread implements Runnable {
 
     @Override
     public void run() {
-        String[] req;
+        String response;
         try {
-            req = recv();
-            System.out.println(extractHeaders(req[0]));
-            System.out.println(extractBody(req[1]));
-            send("HTTP/1.1 200 OK");
+            String[] req = recv();
+            HashMap<String, String> headers = extractHeaders(req[0]);
+            JSONObject body = extractBody(req[1]);
+            response = RequestHandler.handle(headers, body);
         } catch (IOException e) {
-            send("HTTP/1.1 500 Internal Server Error");
-            logger.log(Level.INFO, "Failed to receive request : 500", e);
-        } catch (BadRequestException e) {
-            send("HTTP/1.1 400 Bad Request");
-            logger.log(Level.INFO, "Received bad request : 400", e);
+            response = ErrorHandler.handle(new RequestHandlingException(Status.INTERNAL_SERVER_ERROR, "An IO error occurred"));
+        } catch (RequestHandlingException e) {
+            response = ErrorHandler.handle(e);
         }
+        send(response);
         close();
     }
 
@@ -104,7 +103,7 @@ public class ServerThread implements Runnable {
         return headers;
     }
 
-    private JSONObject extractBody(String bodyString) throws BadRequestException {
+    private JSONObject extractBody(String bodyString) throws RequestHandlingException {
         try {
             if (bodyString.isBlank()) {
                 return new JSONObject();
@@ -113,7 +112,7 @@ public class ServerThread implements Runnable {
             }
         } catch (JSONException e) {
             logger.log(Level.INFO, "Malformed JSON in body", e);
-            throw new BadRequestException("Malformed JSON in body");
+            throw new RequestHandlingException(Status.BAD_REQUEST, "Malformed JSON in body");
         }
     }
 
